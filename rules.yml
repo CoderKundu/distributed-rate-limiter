@@ -19,15 +19,18 @@ rules:
     window_sec: 300
     on_redis_error: closed
 
-  # used by the k6 scripts in bench/
+  # used by the k6 scripts in bench/. closed so a redis timeout can't
+  # quietly inflate the accuracy numbers
   bench-window:
     algorithm: sliding_window
     limit: 100
     window_sec: 60
+    on_redis_error: closed
   bench-bucket:
     algorithm: token_bucket
     capacity: 100
     refill_per_sec: 1.67
+    on_redis_error: closed
   loadtest:
     algorithm: token_bucket
     capacity: 1000000000

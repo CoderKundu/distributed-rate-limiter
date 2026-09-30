@@ -32,8 +32,8 @@ describe('redis stalls mid-test (CLIENT PAUSE)', () => {
 
     expect(open).toMatchObject({ allowed: true, degraded: true });
     expect(closed).toMatchObject({ allowed: false, degraded: true, retryAfterMs: 1000 });
-    // commandTimeout is 50ms, give it some slack for CI
-    expect(elapsed).toBeLessThan(250);
+    // commandTimeout is 100ms, give it some slack for CI
+    expect(elapsed).toBeLessThan(300);
 
     await sleep(550);
     expect((await limiter.check('closed', 'k')).degraded).toBeUndefined();

@@ -33,6 +33,7 @@ export function createApp(redis: Redis, limiter: Limiter, opts: AppOptions = {})
         allowed: r.allowed,
         remaining: r.remaining,
         retryAfterMs: r.retryAfterMs,
+        ...(r.degraded && { degraded: true }),
       });
     } catch (err) {
       next(err);

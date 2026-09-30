@@ -22,6 +22,11 @@ const app = createApp(redis, limiter, { naive: process.env.ENABLE_NAIVE === '1' 
 const server = app.listen(port, () => {
   console.log(`listening on :${port} with ${rules.size} rules (${[...rules.keys()].join(', ')})`);
 });
+// Node closes idle keep-alive sockets after 5s by default, nginx doesn't know
+// that and occasionally sends a request down a socket that's being closed ->
+// "connection reset by peer" / 502. Keep ours open longer than nginx's.
+server.keepAliveTimeout = 65_000;
+server.headersTimeout = 66_000;
 
 function shutdown() {
   server.close(() => {

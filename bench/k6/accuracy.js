@@ -16,6 +16,8 @@ const TOTAL = Number(__ENV.TOTAL || 10000);
 const admitted = new Counter('admitted');
 const rejected = new Counter('rejected');
 const errors = new Counter('errors');
+// answered by the failure mode instead of redis. should be 0 for a clean run
+const degraded = new Counter('degraded');
 
 export const options = {
   scenarios: {
@@ -46,14 +48,22 @@ export default function ({ key }) {
   if (res.status === 200) admitted.add(1);
   else if (res.status === 429) rejected.add(1);
   else errors.add(1);
+
+  if (res.status === 200 || res.status === 429) {
+    if (res.json('degraded')) degraded.add(1);
+  }
 }
 
 export function handleSummary(data) {
   const n = (m) => (data.metrics[m] ? data.metrics[m].values.count : 0);
   const a = n('admitted');
+  const secs = data.state.testRunDurationMs / 1000;
+  // the bucket keeps refilling (1.67/s) while the test runs, so for it the
+  // fair ceiling is 100 + refill * duration, not a flat 100
+  const ceiling = RULE === 'bench-bucket' && MODE === 'lua' ? Math.floor(100 + 1.67 * secs) : 100;
   const line =
-    `mode=${MODE} rule=${MODE === 'naive' ? '-' : RULE} requests=${TOTAL} ` +
-    `admitted=${a} rejected=${n('rejected')} errors=${n('errors')} ` +
-    `over_admitted=${(((a - 100) / 100) * 100).toFixed(1)}%\n`;
+    `mode=${MODE} rule=${MODE === 'naive' ? '-' : RULE} requests=${TOTAL} secs=${secs.toFixed(1)} ` +
+    `admitted=${a} ceiling=${ceiling} rejected=${n('rejected')} degraded=${n('degraded')} errors=${n('errors')} ` +
+    `over_limit=${(Math.max(0, a - ceiling) / ceiling * 100).toFixed(1)}%\n`;
   return { stdout: line };
 }
