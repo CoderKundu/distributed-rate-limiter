@@ -1,0 +1,20 @@
+rules:
+  # general API traffic: bursts of 100, ~100/min sustained
+  api-default:
+    algorithm: token_bucket
+    capacity: 100
+    refill_per_sec: 1.67
+    on_redis_error: open
+
+  # someone brute forcing passwords is worse than a login outage
+  login:
+    algorithm: sliding_window
+    limit: 5
+    window_sec: 60
+    on_redis_error: closed
+
+  otp:
+    algorithm: sliding_window
+    limit: 3
+    window_sec: 300
+    on_redis_error: closed
