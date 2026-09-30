@@ -29,6 +29,8 @@ if [[ $what == all || $what == latency ]]; then
   for t in check demo noop; do
     $K6 -e BASE_URL=$BASE -e TARGET=$t /scripts/latency.js
   done
+  echo "-- in-process, no http --"
+  REDIS_URL=${REDIS_URL:-redis://localhost:6379} npx tsx bench/check-latency.ts
 fi
 
 if [[ $what == all || $what == throughput ]]; then
