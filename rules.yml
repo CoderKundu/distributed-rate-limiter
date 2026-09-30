@@ -18,3 +18,17 @@ rules:
     limit: 3
     window_sec: 300
     on_redis_error: closed
+
+  # used by the k6 scripts in bench/
+  bench-window:
+    algorithm: sliding_window
+    limit: 100
+    window_sec: 60
+  bench-bucket:
+    algorithm: token_bucket
+    capacity: 100
+    refill_per_sec: 1.67
+  loadtest:
+    algorithm: token_bucket
+    capacity: 1000000000
+    refill_per_sec: 1000000
